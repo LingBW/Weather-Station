@@ -14,16 +14,16 @@ import serial
 import numpy as np
 import datetime
 import time
-'''import win32gui,win32con,win32console
+#import win32gui,win32con,win32console
 #from watchdog.observers import Observer
 #from watchdog.events import LoggingEventHandler
   
 print "Please do not close Weather-Station window."
-
+#time.sleep(3)
 # automactic minimize window
-Minimize = win32gui.GetForegroundWindow()
+'''Minimize2 = win32gui.GetForegroundWindow()
 time.sleep(1)
-win32gui.ShowWindow(Minimize,win32con.SW_MINIMIZE)
+win32gui.ShowWindow(Minimize2,win32con.SW_MINIMIZE)
 # disable close buttom of python window
 hwnd = win32console.GetConsoleWindow()
 if hwnd:
@@ -43,60 +43,69 @@ if ditnu < 0:
 #ser = serial.Serial('COM16', 9600)                #   in Windows
 global weather_data, stime, transmit
 weather_data = []
-stime = 3 #minutes, one hour is 60
-transmit = 'OFF' # ON,OFF
+stime = 10 #minutes, one hour is 60
+transmit = 'ON' # ON,OFF
 
 def getdata():
     try:
-        ser = serial.Serial('/dev/ttyUSB0',9600,timeout=30) #
-        #ser = serial.Serial('COM16', 9600)                #   in Windows
-    except:
-        print 'Weather Station connection problem!'
-        raise
-    mes = ser.readline()
-    ser.close()
-    try:    
+        ser = serial.Serial('/dev/ttyUSB1',9600,timeout=30) #
+        #ser = serial.Serial('COM26', 9600,timeout=30)                #   in Windows
+    except :#OSError as en:
+        #if en.errno == 2:
+        print 'Weather Station USB-port connection problem!'
+        raise Exception()
+    
+    try: 
+        mes = ser.readline()
+        #print 'message'
+        ser.close()
         mes = mes.split(',')
         mes = mes[:-1]
         mes[12]
     except:
         print 'No data transmitted from weather station. Check out the power supply of weather station'
-        raise
+        raise Exception()
     return mes
     
 def transdata(wdata):
     mesnp = np.array(wdata)
     mesnpt = mesnp.T
     #time.sleep(40)
-    AT = np.mean([float(i) for i in mesnpt[6]])
-    #BP = np.mean([float(i) for i in mesnpt[7]])
-    #RH = np.mean([float(i) for i in mesnpt[8]])
+    AT = np.mean([float(i) for i in mesnpt[6]])+30 #avoid negative value,
+    BP = np.mean([float(i) for i in mesnpt[8]])
+    RH = np.mean([float(i) for i in mesnpt[7]])
     #VT = np.mean([float(i) for i in mesnpt[12]])
 
-    WS = [float(i) for i in mesnpt[3]]
-    WD = [float(i) for i in mesnpt[4]]
-    WSU,WSV = [],[]
+    WS = np.mean([float(i) for i in mesnpt[3]])
+    WD = np.mean([float(i) for i in mesnpt[4]])
+    '''WSU,WSV = [],[]
     for i in range(len(WS)):
         U = (WS[i]*0.5144444)*math.sin(WD[i]*math.pi/180)
         V = (WS[i]*0.5144444)*math.cos(WD[i]*math.pi/180)
         WSU.append(U); WSV.append(V)
-    WU = np.mean(WSU); WV = np.mean(WSV) # meter per second
+    WU = np.mean(WSU); WV = np.mean(WSV) # meter per second#'''
     #time.sleep(20)
     #print 'WU,WV,AT,BP,RH,VT',WU,WV,AT,BP,RH,VT,mesnpt[2][-1]
-    mes1 = '%.4d%.4d%.4d'%(WU*10,WV*10,AT*10)
-    print 'WU,WV,AT 10-times',mes1
+    #mes1 = '%.4d%.4d%.4d'%(WU*10,WV*10,AT*10)
+    mes1 = '%.3d%.3d%.5d%.3d%.4d'%(AT*10,RH*10,BP*10,WS*10,WD*10)
+    #print 'WU,WV,AT 10-times',mes1
+    print 'AT3,RH3,BP5,WS3,WD4',mes1
     del weather_data[:] #empty the list
 
     # Send data to satellite
     
     try:
         try:
-            ser1=serial.Serial('/dev/ttyUSB1',9600) # linux
-            #ser1 = serial.Serial('COM16', 9600)              #   in Windows
-        except:
-            time.sleep(60)
-            ser1=serial.Serial('/dev/ttyUSB1',9600) # linux
-            #ser1 = serial.Serial('COM16', 9600)              #   in Windows
+            ser1=serial.Serial('/dev/ttyUSB0',9600) # linux
+            #ser1 = serial.Serial('COM27', 9600)              #   in Windows
+        except OSError as en:
+            if en.errno == 16 :
+                time.sleep(180)
+                ser1=serial.Serial('/dev/ttyUSB0',9600) # linux
+                #ser1 = serial.Serial('COM27', 9600)              #   in Windows               
+            else :              
+                #print 'Transmitter USB-port connection problem!'
+                raise
         time.sleep(1)
         ser1.writelines('\n')
         time.sleep(1)
@@ -109,7 +118,7 @@ def transdata(wdata):
         ser1.writelines('\n')
         time.sleep(1)
         #ser.writelines('ylb9'+meandepth+rangedepth+time_len+meantemp+sdeviatemp+'\n')
-        ser1.writelines('ylb9'+mes1+'\n')
+        ser1.writelines('ylb'+mes1+'\n')
         time.sleep(2) # 1100s 18 minutes
         ser1.close() # close port
     except:
@@ -137,11 +146,11 @@ def plotter():
         ws = mes[3]
         DT = mes[1]+' '+mes[2]
         ################################################Transmit#######################################
-        weather_data.append(mes[:-1]); print len(weather_data),DT
+        weather_data.append(mes); #print len(weather_data),mes
         if len(weather_data)==stime:
             
             if transmit == 'ON':
-                #looptime = looptime-12000
+                looptime = looptime-13000
                 transdata(weather_data) #transmit data to AP3
         
         x0, y0 = (200,200)
