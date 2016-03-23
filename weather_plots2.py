@@ -21,7 +21,7 @@ import time
 print "Please do not close Weather-Station window."
 #time.sleep(3)
 # automactic minimize window
-'''Minimize2 = win32gui.GetForegroundWindow()
+Minimize2 = win32gui.GetForegroundWindow()
 time.sleep(1)
 win32gui.ShowWindow(Minimize2,win32con.SW_MINIMIZE)
 # disable close buttom of python window
@@ -43,25 +43,31 @@ if ditnu < 0:
 #ser = serial.Serial('COM16', 9600)                #   in Windows
 global weather_data, stime, transmit
 weather_data = []
-stime = 10 #minutes, one hour is 60
-transmit = 'ON' # ON,OFF
+stime = 60 #minutes, one hour is 60
+transmit = 'OFF' # ON,OFF
+save_raw_data = 'OFF' # ON,OFF
 
 def getdata():
     try:
-        ser = serial.Serial('/dev/ttyUSB1',9600,timeout=30) #
-        #ser = serial.Serial('COM26', 9600,timeout=30)                #   in Windows
+        #ser = serial.Serial('/dev/ttyUSB0',9600,timeout=30) #
+        ser = serial.Serial('COM26', 9600,timeout=30)                #   in Windows
     except :#OSError as en:
         #if en.errno == 2:
         print 'Weather Station USB-port connection problem!'
         raise Exception()
     
     try: 
-        mes = ser.readline()
+        mes0 = ser.readline()
         #print 'message'
         ser.close()
-        mes = mes.split(',')
+        
+        mes = mes0.split(',')
         mes = mes[:-1]
         mes[12]
+        if save_raw_data == 'ON':
+            tf = open("weather-station1-output.txt", "a")
+            tf.write(mes0)
+            tf.close()
     except:
         print 'No data transmitted from weather station. Check out the power supply of weather station'
         raise Exception()
@@ -87,7 +93,7 @@ def transdata(wdata):
     #time.sleep(20)
     #print 'WU,WV,AT,BP,RH,VT',WU,WV,AT,BP,RH,VT,mesnpt[2][-1]
     #mes1 = '%.4d%.4d%.4d'%(WU*10,WV*10,AT*10)
-    mes1 = '%.3d%.3d%.5d%.3d%.4d'%(AT*10,RH*10,BP*10,WS*10,WD*10)
+    mes1 = '%.3d%.3d%.4d%.3d%.4d'%(AT*10,RH*10,BP,WS*10,WD*10)
     #print 'WU,WV,AT 10-times',mes1
     print 'AT3,RH3,BP5,WS3,WD4',mes1
     del weather_data[:] #empty the list
@@ -96,13 +102,13 @@ def transdata(wdata):
     
     try:
         try:
-            ser1=serial.Serial('/dev/ttyUSB0',9600) # linux
-            #ser1 = serial.Serial('COM27', 9600)              #   in Windows
+            #ser1=serial.Serial('/dev/ttyUSB0',9600) # linux
+            ser1 = serial.Serial('COM27', 9600)              #   in Windows
         except OSError as en:
             if en.errno == 16 :
                 time.sleep(180)
-                ser1=serial.Serial('/dev/ttyUSB0',9600) # linux
-                #ser1 = serial.Serial('COM27', 9600)              #   in Windows               
+                #ser1=serial.Serial('/dev/ttyUSB0',9600) # linux
+                ser1 = serial.Serial('COM27', 9600)              #   in Windows               
             else :              
                 #print 'Transmitter USB-port connection problem!'
                 raise
@@ -118,7 +124,7 @@ def transdata(wdata):
         ser1.writelines('\n')
         time.sleep(1)
         #ser.writelines('ylb9'+meandepth+rangedepth+time_len+meantemp+sdeviatemp+'\n')
-        ser1.writelines('ylb'+mes1+'\n')
+        ser1.writelines('ylbb'+mes1+'\n')
         time.sleep(2) # 1100s 18 minutes
         ser1.close() # close port
     except:
