@@ -14,7 +14,7 @@ import serial
 import numpy as np
 import datetime
 import time
-#import win32gui,win32con,win32console
+import win32gui,win32con,win32console
 #from watchdog.observers import Observer
 #from watchdog.events import LoggingEventHandler
   
@@ -44,13 +44,13 @@ if ditnu < 0:
 global weather_data, stime, transmit
 weather_data = []
 stime = 60 #minutes, one hour is 60
-transmit = 'OFF' # ON,OFF
-save_raw_data = 'OFF' # ON,OFF
+transmit = 'ON' # ON,OFF
+save_raw_data = 'ON' # ON,OFF
 
 def getdata():
     try:
         #ser = serial.Serial('/dev/ttyUSB0',9600,timeout=30) #
-        ser = serial.Serial('COM26', 9600,timeout=30)                #   in Windows
+        ser = serial.Serial('COM8', 9600,timeout=30)                #   in Windows
     except :#OSError as en:
         #if en.errno == 2:
         print 'Weather Station USB-port connection problem!'
@@ -65,7 +65,7 @@ def getdata():
         mes = mes[:-1]
         mes[12]
         if save_raw_data == 'ON':
-            tf = open("weather-station1-output.txt", "a")
+            tf = open("weather-station-output.txt", "a")
             tf.write(mes0)
             tf.close()
     except:
