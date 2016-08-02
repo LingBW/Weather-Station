@@ -158,9 +158,8 @@ def plotter():
         if len(weather_data)==stime:
             
             if transmit == 'ON':
-                looptime = looptime-13000
                 transdata(weather_data) #transmit data to AP3
-        
+                looptime = looptime-13000
         x0, y0 = (200,200)
         
         radian = angle*(math.pi / 180)
