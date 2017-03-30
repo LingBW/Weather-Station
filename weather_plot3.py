@@ -151,13 +151,14 @@ def plotter():
         
         angle = int(mes[4])
         at = mes[6]
+        bp = mes[8]# added by JiM 24 Apr 2016
         ws = mes[3]
         DT = mes[1]+' '+mes[2]
         ################################################Transmit#######################################
         weather_data.append(mes); #print len(weather_data),mes
         if len(weather_data)==stime:
             
-            if transmit == 'ON':
+            if transmit == 'ON':  
                 transdata(weather_data) #transmit data to AP3
                 looptime = looptime-13000
         x0, y0 = (200,200)
@@ -197,6 +198,7 @@ def plotter():
         
         canvas.create_text(100,100,text=ws,tags='text',font=('times',20,'underline'),fill='blue')
         canvas.create_text(320,20,text='%.1f'%Faht,tags='text',font=('times',20,'underline'),fill='red')
+        canvas.create_text(60,320,text=bp,tags='text',font=('times',20,'underline'),fill='black')
         canvas.create_line(x0,y0,x1,y1, tag='lines',arrow=LAST,arrowshape=(18,20,18),width=10,fill=clr)#,dash=(7,4*int(radian)+1)
         #wt = Label(canvas,text='%d'%angle)
         #wt.pack()
@@ -210,6 +212,7 @@ def makewindcanvas(root):
     canvas.create_line(200,320,200,70, tag='yline',arrow=LAST,arrowshape=(8,10,8),width=2,fill='gray',dash=(5,4))
     canvas.create_text(220,80,text='N',font=('times',20,'italic'),tag='north')
     canvas.create_text(100,78,text='KTS',font=('times',14,'italic'),tag='speed') #M/H,fill='gray'
+    canvas.create_text(125,320,text='mb',font=('times',14,'italic'),tag='barop') #M/H,fill='gray'
     canvas.create_text(360,20,text=u"\xb0"+'F',font=('arial',20,'bold'),tag='tempurature') #u"\xb0"+'F'
     sx = 120; sy = 340; sy2 = sy+12
     for i in range(len(colors)):
