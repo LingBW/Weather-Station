@@ -45,6 +45,7 @@ global weather_data, stime, transmit
 weather_data = []
 stime = 10 #minutes, one hour is 60
 transmit = 'OFF' # ON,OFF
+save_raw_data = 'ON' # ON,OFF
 
 def getdata():
     try:
@@ -63,9 +64,10 @@ def getdata():
         mes = mes0.split(',')
         mes = mes[:-1]
         mes[12]
-        tf = open("weather-station1-output.txt", "w")
-        tf.write(mes0)
-        tf.close()
+        if save_raw_data == 'ON':
+            tf = open("weather-station1-output.dat", "a")
+            tf.write(mes0)
+            tf.close()
     except:
         print 'No data transmitted from weather station. Check out the power supply of weather station'
         raise Exception()
