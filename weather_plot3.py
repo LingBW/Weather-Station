@@ -94,14 +94,16 @@ def transdata(wdata):
         WSU.append(U); WSV.append(V)
     WU = np.mean(WSU); WV = np.mean(WSV) # meter per second#'''
     rad0 = math.atan2(WU,WV)
-    WD = rad0*(180/math.pi) #wind direction, unit: degree
-    WS = np.mean(ws) # wind speed,unit: kts
+    WD = rad0*(180/math.pi) #wind direction, unit: degree   
     if WD<0:
         WD = WD+360
+    WS = np.mean(ws)#*0.5144444 turn to m/s # wind speed,unit: kts
     #time.sleep(20)
     #print 'WU,WV,AT,BP,RH,VT',WU,WV,AT,BP,RH,VT,mesnpt[2][-1]
     #mes1 = '%.4d%.4d%.4d'%(WU*10,WV*10,AT*10)
-    mes1 = '%.3d%.3d%.5d%.3d%.4d'%(AT*10,RH*10,BP*10,WS*10,WD*10)
+    # Units: dedree,%,mb,kts,degree
+    #mes1 = '%.3d%.3d%.5d%.3d%.4d'%(AT*10,RH*10,BP*10,WS*10,WD*10)
+    mes1 = '%.3d%.3d%.4d%.3d%.3d'%(AT*10,RH*10,BP,WS*10,WD)
     #print 'WU,WV,AT 10-times',mes1
     #print 'AT3,RH3,BP5,WS3,WD4',mes1
     del weather_data[:] #empty the list
