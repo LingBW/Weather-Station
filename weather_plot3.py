@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 Created on Tue Feb  9 14:20:18 2016
+Get data from weather station every minute.
 
 @author: bling
 """
@@ -43,8 +44,9 @@ if ditnu < 0:
 #ser = serial.Serial('COM16', 9600)                #   in Windows
 global weather_data, stime, transmit
 weather_data = []
-stime = 10 #minutes, one hour is 60
-transmit = 'OFF' # ON,OFF
+################ setting up ###################################################
+stime = 3 #minutes, one hour is 60,send data interval
+transmit = 'ON' # ON,OFF
 save_raw_data = 'ON' # ON,OFF
 
 def getdata():
@@ -58,14 +60,14 @@ def getdata():
     
     try: 
         mes0 = ser.readline()
-        #print 'message'
+        print 'mes0',mes0 # print raw data
         ser.close()
         
         mes = mes0.split(',')
         mes = mes[:-1]
         mes[12]
         if save_raw_data == 'ON':
-            tf = open("weather-station1-output.dat", "a")
+            tf = open("weather-station1-output.dat", "a") # "a"-continue save data,"w"-start a new file when start running
             tf.write(mes0)
             tf.close()
     except:
@@ -77,21 +79,23 @@ def transdata(wdata):
     mesnp = np.array(wdata)
     mesnpt = mesnp.T
     #time.sleep(40)
-    AT = np.mean([float(i) for i in mesnpt[6]])+30 #avoid negative value,
-    BP = np.mean([float(i) for i in mesnpt[8]])
-    RH = np.mean([float(i) for i in mesnpt[7]])
+    AT = np.mean([float(i) for i in mesnpt[6]])+30 #'+30' means avoid negative value, Unit: celsius-Degree
+    BP = np.mean([float(i) for i in mesnpt[8]]) # BAROMETER PRESSURE ( mb )
+    RH = np.mean([float(i) for i in mesnpt[7]]) # RELATIVE HUMIDITY ( % )
     #VT = np.mean([float(i) for i in mesnpt[12]])
-
-    WS = np.mean([float(i) for i in mesnpt[3]])
+    ws = [float(i) for i in mesnpt[3]]
+    wd = [float(i) for i in mesnpt[4]]
+    
     #WD = np.mean([float(i) for i in mesnpt[4]])  # we can not average direction in this way
     WSU,WSV = [],[]
-    for i in range(len(WS)):
-        U = (WS[i]*0.5144444)*math.sin(WD[i]*math.pi/180)
-        V = (WS[i]*0.5144444)*math.cos(WD[i]*math.pi/180)
+    for i in range(len(ws)):
+        U = (ws[i]*0.5144444)*math.sin(wd[i]*math.pi/180)
+        V = (ws[i]*0.5144444)*math.cos(wd[i]*math.pi/180)
         WSU.append(U); WSV.append(V)
     WU = np.mean(WSU); WV = np.mean(WSV) # meter per second#'''
     rad0 = math.atan2(WU,WV)
-    WD = rad0*(180/math.pi)
+    WD = rad0*(180/math.pi) #wind direction, unit: degree
+    WS = np.mean(ws) # wind speed,unit: kts
     if WD<0:
         WD = WD+360
     #time.sleep(20)
@@ -99,7 +103,7 @@ def transdata(wdata):
     #mes1 = '%.4d%.4d%.4d'%(WU*10,WV*10,AT*10)
     mes1 = '%.3d%.3d%.5d%.3d%.4d'%(AT*10,RH*10,BP*10,WS*10,WD*10)
     #print 'WU,WV,AT 10-times',mes1
-    print 'AT3,RH3,BP5,WS3,WD4',mes1
+    #print 'AT3,RH3,BP5,WS3,WD4',mes1
     del weather_data[:] #empty the list
 
     # Send data to satellite
@@ -131,6 +135,7 @@ def transdata(wdata):
         ser1.writelines('ylb'+mes1+'\n')
         time.sleep(2) # 1100s 18 minutes
         ser1.close() # close port
+        print 'Weather-station Sent Data: '+mes1
     except:
         print "Transmitter connection problem! Can't send data to satellite."
     
@@ -152,16 +157,19 @@ def plotter():
     else:
         
         angle = int(mes[4])
-        at = mes[6]
-        bp = mes[8]# added by JiM 24 Apr 2016
-        ws = mes[3]
+        at = mes[6] #Unit: celsius-Degree
+        bp = mes[8] # added by JiM 24 Apr 2016
+        ws = mes[3] # unit: kts
         DT = mes[1]+' '+mes[2]
         ################################################Transmit#######################################
         weather_data.append(mes); #print len(weather_data),mes
         if len(weather_data)==stime:
             
             if transmit == 'ON':  
-                transdata(weather_data) #transmit data to AP3
+                try:
+                    transdata(weather_data) #transmit data to AP3
+                except:
+                    print 'transdata function error!'
                 looptime = looptime-13000
         x0, y0 = (200,200)
         
@@ -242,7 +250,7 @@ if __name__ == '__main__':
     #makemenu(root)
     #global canvas,colors#, scaleVar, checkVar 
     #colors = ['green','olive','yellow','orange','blue','magenta','red']#'cyan',
-    cat = [1, 3, 6, 10, 16, 21, 27, 33, 40, 47, 55, 63, 64]
+    cat = [1, 3, 6, 10, 16, 21, 27, 33, 40, 47, 55, 63, 64] # numbers stand for wind-speed(kts), aim for wind-range
     colors = ['#FFFFFF','#CCFFFF','#99FFCC','#99FF99','#99FF66','#99FF00','#CCFF00','#FFFF00','#FFCC00','#FF9900','#FF6600','#FF3300','#FF0000']
     canvas = Canvas(root,width=400, height=400)#,bg='blue'
     canvas.pack(side=TOP)   
