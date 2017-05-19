@@ -45,7 +45,7 @@ if ditnu < 0:
 global weather_data, stime, transmit
 weather_data = []
 ################ setting up ###################################################
-stime = 3 #minutes, one hour is 60,send data interval
+stime = 120 #minutes, one hour is 60,send data interval
 transmit = 'ON' # ON,OFF
 save_raw_data = 'ON' # ON,OFF
 
@@ -60,7 +60,7 @@ def getdata():
     
     try: 
         mes0 = ser.readline()
-        print 'mes0',mes0 # print raw data
+        #print 'Raw-data',mes0 # print raw data
         ser.close()
         
         mes = mes0.split(',')
